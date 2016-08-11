@@ -16,7 +16,16 @@
  */
 package jhanasi.file.utils;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -29,7 +38,10 @@ import static org.junit.Assert.*;
  * @author Nick
  */
 public class RecordTest {
-    
+
+    private File f1, f2;
+    private Record r1, r2;
+
     public RecordTest() {
     }
     
@@ -43,10 +55,51 @@ public class RecordTest {
     
     @Before
     public void setUp() {
+        this.f1 = new File("test1.txt");
+        this.f2 = new File("test2.txt");
+
+        try {
+            if (!this.f1.createNewFile())
+                throw new RuntimeException("SimpleTaskTest: could not create file 1");
+        } catch (IOException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            if (!this.f2.createNewFile())
+                throw new RuntimeException("SimpleTaskTest: could not create file 2");
+        } catch (IOException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try {
+            Files.write(this.f1.toPath(), "hello world".getBytes());
+        } catch (IOException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            Files.write(this.f2.toPath(), "hello world".getBytes());
+        } catch (IOException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try {
+            this.r1 = new Record(f1.toPath(), Files.size(f1.toPath()), null);
+        } catch (IOException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            this.r2 = new Record(f2.toPath(), Files.size(f2.toPath()), "");
+        } catch (IOException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     @After
     public void tearDown() {
+        if (!this.f1.delete())
+            throw new RuntimeException("SimpleTaskTest: could not delete file 1");
+        if (!this.f2.delete())
+            throw new RuntimeException("SimpleTaskTest: could not delete file 2");
     }
 
     /**
@@ -55,12 +108,10 @@ public class RecordTest {
     @Test
     public void testGetPathName() {
         System.out.println("getPathName");
-        Record instance = null;
-        Path expResult = null;
+        Record instance = this.r1;
+        Path expResult = this.f1.toPath();
         Path result = instance.getPathName();
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
 
     /**
@@ -69,12 +120,10 @@ public class RecordTest {
     @Test
     public void testGetFileSize() {
         System.out.println("getFileSize");
-        Record instance = null;
-        long expResult = 0L;
+        Record instance = this.r1;
+        long expResult = this.f1.length();
         long result = instance.getFileSize();
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
 
     /**
@@ -83,12 +132,43 @@ public class RecordTest {
     @Test
     public void testGetFileHash() {
         System.out.println("getFileHash");
-        Record instance = null;
-        String expResult = "";
+        Record instance = this.r1;
+
+        // expected ( actual hash should = 5eb63bbbe01eeed093cb22bb8f5acdc3 )
+        MessageDigest msgDigest = null;
+        try {
+            msgDigest = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (msgDigest == null)
+            throw new NullPointerException("null message digest (1)");
+        final String hashStr = Digest.getDigestHash(msgDigest.digest("hello world".getBytes()));
+        System.out.println(hashStr);
+
+        // tested
+        MessageDigest md = null;
+        try {
+            md = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (md == null)
+            throw new NullPointerException("null message digest (2)");
+
+        try (InputStream is = Files.newInputStream(this.r1.getPathName());
+                DigestInputStream dis = new DigestInputStream(is, md)) {
+            byte[] buffer = new byte[4096];
+            while (dis.read(buffer) != -1) {
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        this.r1.setFileHash(Digest.getDigestHash(md.digest()));
+
         String result = instance.getFileHash();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        assertEquals(hashStr, result);
     }
     
 }
