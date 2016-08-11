@@ -16,6 +16,8 @@
  */
 package jhanasi.file.utils;
 
+import java.nio.file.Path;
+
 /**
  * Record class holds basic information.
  * 
@@ -26,6 +28,29 @@ package jhanasi.file.utils;
  *
  * @author Nick
  */
+
 public class Record {
-    
+
+    private final Path pathName;
+    private final long fileSize;
+    private final String fileHash;
+
+    public Record(final Path name, final long fs, final String hash) {
+        this.pathName = name;
+        this.fileSize = fs;
+        this.fileHash = hash;
+    }
+
+    public Path getPathName() {
+        return this.pathName;
+    }
+
+    public long getFileSize() {
+        return this.fileSize;
+    }
+
+    public String getFileHash() {
+        return this.fileHash;
+    }
+
 }
