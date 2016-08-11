@@ -22,5 +22,18 @@ package jhanasi.file.utils;
  * @author Nick
  */
 public interface Digest {
-    
+
+    // global immutable char[] that holds base 16 characters
+    public static final char[] BASE16 = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
+    public static String getDigestHash(final byte[] arr) {
+        final int len = arr.length;
+        StringBuilder result = new StringBuilder(len * 2);
+        for (int i = 0; i < len; ++i) {
+            final byte b = arr[i];
+            result.append(BASE16[(b >> 4) & 0xF]);
+            result.append(BASE16[(b & 0xF)]);
+        }
+        return result.toString();
+    }
 }
