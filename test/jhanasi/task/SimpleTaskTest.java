@@ -49,14 +49,13 @@ public class SimpleTaskTest {
     }
 
     /**
-     * Test of calc method, of class SimpleTask.
+     * Test of delegate method, of class SimpleTask.
      */
     @Test
-    public void testCalc() {
-        System.out.println("calc");
-        boolean simple = false;
+    public void testDelegate() {
+        System.out.println("delegate");
         SimpleTask instance = null;
-        instance.calc(simple);
+        instance.delegate();
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }

@@ -17,8 +17,16 @@
 package jhanasi.task;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import jhanasi.file.utils.Record;
 import jhanasi.file.utils.Search;
 
 /**
@@ -29,11 +37,14 @@ public class SimpleTask {
 
     private final Path src;
 
+    public static final int DEFAULT_BUFFER = 4096;
+    public static final int DEFAULT_CUTOFF = 65536;
+
     public SimpleTask(final Path start) {
         this.src = start;
     }
 
-    public void calc(final boolean simple) {
+    public void delegate() {
 
         // Gather input files
         Search fileFinder = new Search(this.src);
@@ -50,29 +61,49 @@ public class SimpleTask {
         // mark start time
         long start = System.currentTimeMillis();
 
-        // determine and run following task
-        // add file profiling before this?
-        // -- e.g. calculate # of files
-        //         && the file sizes?
-        // -- or, run all files on advanced that are under x-amount kb
-        //        && remaining files on the simple one?
-        try {
-            if (simple)
-                simple(files);
-            else
-                advanced(files);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // determine and run following tasks
+        List<Path> poolA = new ArrayList<Path>(); // small files
+        List<Path> poolB = new ArrayList<Path>(); // large files
+        prework(files, poolA, poolB);
+        List<Record> result = new ArrayList<Record>();
+        result.addAll(backgroundWork(poolA, 8));
+        result.addAll(backgroundWork(poolA, 1)); // longer running per file
+
+        System.out.println("Processed files: " + result.size());
 
         // mark end time
         long end = System.currentTimeMillis();
         System.out.println("elapsed = " + (end - start) + " ms");
     }
 
-    private void simple(final List<Path> filePaths) {
+    private void prework(final List<Path> src, final List<Path> a, final List<Path> b) {
+        if (src == null || a == null || b == null)
+            throw new NullPointerException("null input");
+        src.stream().forEach((p) -> {
+            try {
+                final long fs = Files.size(p);
+                if (fs < DEFAULT_CUTOFF)
+                    a.add(p);
+                else
+                    b.add(p);
+            } catch (IOException ex) {
+                Logger.getLogger(SimpleTask.class.getName()).log(Level.SEVERE, null, ex);
+                // ex.printStackTrace();
+            }
+        });
     }
 
-    private void advanced(final List<Path> filePaths) {
+    private List<Record> backgroundWork(final List<Path> filePaths, final int threadCount) {
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        List<Record> result = Collections.synchronizedList(new ArrayList<Record>());
+        for (int i = 0; i < filePaths.size(); ++i) {
+            Runnable worker = new SimpleTaskWorker(filePaths.get(i), result);
+            executor.execute(worker);
+        }
+        executor.shutdown();
+        while (!executor.isTerminated()) {
+            // wait
+        }
+        return result;
     }
 }
