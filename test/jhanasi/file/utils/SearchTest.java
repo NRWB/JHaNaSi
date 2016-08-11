@@ -16,7 +16,13 @@
  */
 package jhanasi.file.utils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import jhanasi.task.SimpleTaskTest;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -29,24 +35,52 @@ import static org.junit.Assert.*;
  * @author Nick
  */
 public class SearchTest {
-    
+
+    private File folder;
+    private File subFolder;
+    private File file;
+
     public SearchTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
+        this.folder = new File("testFolder");
+        this.subFolder = new File(this.folder, "testSubFolder");
+        if (!this.folder.mkdir())
+            throw new RuntimeException("SimpleTaskTest: could not create folder");
+        if (!this.subFolder.mkdir())
+            throw new RuntimeException("SimpleTaskTest: could not create sub folder");
+        this.file = new File(this.subFolder, "test.txt");
+        try {
+            if (!this.file.createNewFile())
+                throw new RuntimeException("SimpleTaskTest: could not create file");
+        } catch (IOException ex) {
+            Logger.getLogger(SimpleTaskTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            Files.write(this.file.toPath(), "hello world".getBytes());
+        } catch (IOException ex) {
+            Logger.getLogger(SimpleTaskTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
-    
+
     @After
     public void tearDown() {
+        if (!this.file.delete())
+            throw new RuntimeException("SimpleTaskTest: could not delete file");
+        if (!this.subFolder.delete())
+            throw new RuntimeException("SimpleTaskTest: could not delete sub folder");
+        if (!this.folder.delete())
+            throw new RuntimeException("SimpleTaskTest: could not delete folder");
     }
 
     /**
@@ -55,12 +89,10 @@ public class SearchTest {
     @Test
     public void testGetList() throws Exception {
         System.out.println("getList");
-        Search instance = null;
-        List<Record> expResult = null;
+        Search instance = new Search(this.folder.toPath());
+        final int expResult = 1;
         List<Record> result = instance.getList();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        // result.forEach((k) -> System.out.println(k.getPathName()));
+        assertEquals(expResult, result.size());
     }
-    
 }

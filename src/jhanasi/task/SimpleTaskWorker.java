@@ -51,8 +51,6 @@ public class SimpleTaskWorker implements Runnable {
 
     private void processFile() throws Exception {
         MessageDigest md = MessageDigest.getInstance("MD5");
-        if (Files.isDirectory(this.path, LinkOption.NOFOLLOW_LINKS))
-            return; // skip b/c else throws error on windows
         try (InputStream is = Files.newInputStream(this.path);
                 DigestInputStream dis = new DigestInputStream(is, md)) {
             byte[] buffer = new byte[DEFAULT_BUFFER];

@@ -43,8 +43,8 @@ public class Search {
             for (Path entry : stream) {
                 if (Files.isDirectory(entry))
                     listFilesRecursively(entry);
-                Record r = new Record(entry, Files.size(entry), null);
-                this.paths.add(r);
+                else
+                    this.paths.add(new Record(entry, Files.size(entry), null));
             }
         }
     }
