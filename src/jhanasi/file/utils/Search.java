@@ -31,11 +31,11 @@ import java.util.List;
 public class Search {
 
     private final Path origin;
-    private final List<Path> paths;
+    private final List<Record> paths;
 
     public Search(final Path p) {
         this.origin = p;
-        this.paths = new ArrayList<Path>();
+        this.paths = new ArrayList<Record>();
     }
 
     private void listFilesRecursively(Path path) throws IOException {
@@ -43,12 +43,13 @@ public class Search {
             for (Path entry : stream) {
                 if (Files.isDirectory(entry))
                     listFilesRecursively(entry);
-                this.paths.add(entry);
+                Record r = new Record(entry, Files.size(entry), null);
+                this.paths.add(r);
             }
         }
     }
 
-    public List<Path> getList() throws IOException {
+    public List<Record> getList() throws IOException {
         this.paths.clear();
         listFilesRecursively(this.origin);
         return this.paths;

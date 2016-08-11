@@ -33,7 +33,7 @@ public class Record {
 
     private final Path pathName;
     private final long fileSize;
-    private final String fileHash;
+    private String fileHash;
 
     public Record(final Path name, final long fs, final String hash) {
         this.pathName = name;
@@ -51,6 +51,10 @@ public class Record {
 
     public String getFileHash() {
         return this.fileHash;
+    }
+
+    public void setFileHash(final String hash) {
+        this.fileHash = hash;
     }
 
 }

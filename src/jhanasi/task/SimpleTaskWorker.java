@@ -16,8 +16,13 @@
  */
 package jhanasi.task;
 
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.util.List;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import jhanasi.file.utils.Digest;
 import jhanasi.file.utils.Record;
 
 /**
@@ -26,16 +31,34 @@ import jhanasi.file.utils.Record;
  */
 public class SimpleTaskWorker implements Runnable {
 
-    private final Path path;
-    private final List<Record> records;
+    public static final int DEFAULT_BUFFER = 4096; // 4096 8192 16384
 
-    public SimpleTaskWorker(final Path p, final List<Record> r) {
+    private final Path path;
+    private final Record record;
+
+    public SimpleTaskWorker(final Path p, Record r) {
         this.path = p;
-        this.records = r;
+        this.record = r;
     }
 
     @Override
     public void run() {
-        final String name = this.path.toFile().getName();
+        try {
+            processFile();
+        } catch (Exception ex) {
+        }
+    }
+
+    private void processFile() throws Exception {
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        if (Files.isDirectory(this.path, LinkOption.NOFOLLOW_LINKS))
+            return; // skip b/c else throws error on windows
+        try (InputStream is = Files.newInputStream(this.path);
+                DigestInputStream dis = new DigestInputStream(is, md)) {
+            byte[] buffer = new byte[DEFAULT_BUFFER];
+            while (dis.read(buffer) != -1) {
+            }
+        }
+        this.record.setFileHash(Digest.getDigestHash(md.digest()));
     }
 }

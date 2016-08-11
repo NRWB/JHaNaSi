@@ -17,15 +17,16 @@
 package jhanasi.task;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import jhanasi.file.utils.Record;
 import jhanasi.file.utils.Search;
 
@@ -36,8 +37,6 @@ import jhanasi.file.utils.Search;
 public class SimpleTask {
 
     private final Path src;
-
-    public static final int DEFAULT_BUFFER = 4096;
     public static final int DEFAULT_CUTOFF = 65536;
 
     public SimpleTask(final Path start) {
@@ -48,62 +47,66 @@ public class SimpleTask {
 
         // Gather input files
         Search fileFinder = new Search(this.src);
-        List<Path> files = null;
+        List<Record> files = null;
         try {
             files = fileFinder.getList();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
         }
+
         if (files == null || files.isEmpty())
             throw new RuntimeException("no files gathered");
-        // System.out.println("Gathering complete");
 
         // mark start time
         long start = System.currentTimeMillis();
 
         // determine and run following tasks
-        List<Path> poolA = new ArrayList<Path>(); // small files
-        List<Path> poolB = new ArrayList<Path>(); // large files
-        prework(files, poolA, poolB);
-        List<Record> result = new ArrayList<Record>();
-        result.addAll(backgroundWork(poolA, 8));
-        result.addAll(backgroundWork(poolA, 1)); // longer running per file
+        Map<Path, Record> poolA = Collections.synchronizedMap(new HashMap<Path, Record>()); // small files
+        Map<Path, Record> poolB = Collections.synchronizedMap(new HashMap<Path, Record>()); // large files
 
-        System.out.println("Processed files: " + result.size());
+        long startPre = System.currentTimeMillis();
+        prework(files, poolA, poolB);
+        long endPre = System.currentTimeMillis();
+        System.out.println("prework time elapsed = " + (endPre - startPre) + " ms");
+
+        long startPoolA = System.currentTimeMillis();
+        backgroundWork(poolA, 16);
+        long endPoolA = System.currentTimeMillis();
+        System.out.println("poolA time elapsed = " + (endPoolA - startPoolA) + " ms");
+        System.out.println("poolA.size(): " + poolA.size());
+        long startPoolB = System.currentTimeMillis();
+        backgroundWork(poolB, 1); // longer running per file
+        long endPoolB = System.currentTimeMillis();
+        System.out.println("poolB time elapsed = " + (endPoolB - startPoolB) + " ms");
+        System.out.println("poolB.size(): " + poolB.size());
 
         // mark end time
         long end = System.currentTimeMillis();
         System.out.println("elapsed = " + (end - start) + " ms");
     }
 
-    private void prework(final List<Path> src, final List<Path> a, final List<Path> b) {
+    private void prework(final List<Record> src, final Map<Path, Record> a, final Map<Path, Record> b) {
         if (src == null || a == null || b == null)
             throw new NullPointerException("null input");
-        src.stream().forEach((p) -> {
-            try {
-                final long fs = Files.size(p);
-                if (fs < DEFAULT_CUTOFF)
-                    a.add(p);
-                else
-                    b.add(p);
-            } catch (IOException ex) {
-                Logger.getLogger(SimpleTask.class.getName()).log(Level.SEVERE, null, ex);
-                // ex.printStackTrace();
-            }
+        src.stream().forEach((rp) -> {
+            if (rp.getFileSize() < DEFAULT_CUTOFF)
+                //a.add(rp);
+                a.put(rp.getPathName(), rp);
+            else
+                //b.add(rp);
+                b.put(rp.getPathName(), rp);
         });
     }
 
-    private List<Record> backgroundWork(final List<Path> filePaths, final int threadCount) {
+    private void backgroundWork(final Map<Path, Record> filePaths, final int threadCount) {
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-        List<Record> result = Collections.synchronizedList(new ArrayList<Record>());
-        for (int i = 0; i < filePaths.size(); ++i) {
-            Runnable worker = new SimpleTaskWorker(filePaths.get(i), result);
+        for (Map.Entry<Path, Record> fp : filePaths.entrySet()) {
+            //Runnable worker = new SimpleTaskWorker(filePaths.get(i).getPathName(), filePaths);
+            Runnable worker = new SimpleTaskWorker(fp.getKey(), fp.getValue());
             executor.execute(worker);
         }
         executor.shutdown();
         while (!executor.isTerminated()) {
             // wait
         }
-        return result;
     }
 }

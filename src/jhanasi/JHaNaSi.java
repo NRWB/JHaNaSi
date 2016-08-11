@@ -16,6 +16,10 @@
  */
 package jhanasi;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import jhanasi.task.SimpleTask;
+
 /**
  *
  * @author Nick
@@ -26,7 +30,9 @@ public class JHaNaSi {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        Path p = Paths.get("C:\\Users\\Nick\\Desktop\\web1\\");
+        SimpleTask task = new SimpleTask(p);
+        task.delegate();
     }
     
 }
