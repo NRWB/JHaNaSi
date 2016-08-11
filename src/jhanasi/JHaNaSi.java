@@ -34,5 +34,5 @@ public class JHaNaSi {
         SimpleTask task = new SimpleTask(p);
         task.delegate();
     }
-    
+
 }
