@@ -16,7 +16,6 @@
  */
 package jhanasi.file.utils;
 
-import java.nio.file.Path;
 import java.util.List;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -57,8 +56,8 @@ public class SearchTest {
     public void testGetList() throws Exception {
         System.out.println("getList");
         Search instance = null;
-        List<Path> expResult = null;
-        List<Path> result = instance.getList();
+        List<Record> expResult = null;
+        List<Record> result = instance.getList();
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
