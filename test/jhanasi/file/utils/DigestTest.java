@@ -16,6 +16,15 @@
  */
 package jhanasi.file.utils;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -28,6 +37,8 @@ import static org.junit.Assert.*;
  * @author Nick
  */
 public class DigestTest {
+
+    private File f;
     
     public DigestTest() {
     }
@@ -42,10 +53,24 @@ public class DigestTest {
     
     @Before
     public void setUp() {
+        this.f = new File("test.txt");
+        try {
+            if (!this.f.createNewFile())
+                throw new RuntimeException("DigestTest: could not create file");
+        } catch (IOException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            Files.write(this.f.toPath(), "hello world".getBytes());
+        } catch (IOException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     @After
     public void tearDown() {
+        if (!this.f.delete())
+            throw new RuntimeException("DigestTest: could not delete file");
     }
 
     /**
@@ -54,12 +79,32 @@ public class DigestTest {
     @Test
     public void testGetDigestHash() {
         System.out.println("getDigestHash");
-        byte[] arr = null;
-        String expResult = "";
-        String result = Digest.getDigestHash(arr);
+
+        MessageDigest md = null;
+        try {
+            md = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (md == null)
+            throw new NullPointerException("null message digest");
+
+        try (InputStream is = Files.newInputStream(this.f.toPath());
+                DigestInputStream dis = new DigestInputStream(is, md)) {
+            byte[] buffer = new byte[4096];
+            while (dis.read(buffer) != -1) {
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        String result = Digest.getDigestHash(md.digest());
+
+        String expResult = "5eb63bbbe01eeed093cb22bb8f5acdc3";
+
+        System.out.println(result + " vs " + expResult);
+
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
     
 }

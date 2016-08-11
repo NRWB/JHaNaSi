@@ -60,13 +60,13 @@ public class RecordTest {
 
         try {
             if (!this.f1.createNewFile())
-                throw new RuntimeException("SimpleTaskTest: could not create file 1");
+                throw new RuntimeException("RecordTest: could not create file 1");
         } catch (IOException ex) {
             Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
             if (!this.f2.createNewFile())
-                throw new RuntimeException("SimpleTaskTest: could not create file 2");
+                throw new RuntimeException("RecordTest: could not create file 2");
         } catch (IOException ex) {
             Logger.getLogger(RecordTest.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -97,9 +97,9 @@ public class RecordTest {
     @After
     public void tearDown() {
         if (!this.f1.delete())
-            throw new RuntimeException("SimpleTaskTest: could not delete file 1");
+            throw new RuntimeException("RecordTest: could not delete file 1");
         if (!this.f2.delete())
-            throw new RuntimeException("SimpleTaskTest: could not delete file 2");
+            throw new RuntimeException("RecordTest: could not delete file 2");
     }
 
     /**
