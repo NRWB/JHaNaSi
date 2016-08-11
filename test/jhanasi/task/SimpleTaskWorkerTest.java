@@ -16,19 +16,30 @@
  */
 package jhanasi.task;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import jhanasi.file.utils.Record;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
  * @author Nick
  */
 public class SimpleTaskWorkerTest {
-    
+
+    private File folder;
+    private File file;
+
     public SimpleTaskWorkerTest() {
     }
     
@@ -42,10 +53,29 @@ public class SimpleTaskWorkerTest {
     
     @Before
     public void setUp() {
+        this.folder = new File("testFolder");
+        if (!this.folder.mkdir())
+            throw new RuntimeException("SimpleTaskWorkerTest: could not create folder");
+        this.file = new File(this.folder, "test.txt");
+        try {
+            if (!this.file.createNewFile())
+                throw new RuntimeException("SimpleTaskWorkerTest: could not create file");
+        } catch (IOException ex) {
+            Logger.getLogger(SimpleTaskTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            Files.write(this.file.toPath(), "hello world".getBytes());
+        } catch (IOException ex) {
+            Logger.getLogger(SimpleTaskTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     @After
     public void tearDown() {
+        if (!this.file.delete())
+            throw new RuntimeException("SimpleTaskWorkerTest: could not delete file");
+        if (!this.folder.delete())
+            throw new RuntimeException("SimpleTaskWorkerTest: could not delete folder");
     }
 
     /**
@@ -54,10 +84,22 @@ public class SimpleTaskWorkerTest {
     @Test
     public void testRun() {
         System.out.println("run");
-        SimpleTaskWorker instance = null;
-        instance.run();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        Path p = this.file.toPath();
+        Record r = null;
+        try {
+            r = new Record(p, Files.size(p), null);
+        } catch (IOException ex) {
+            Logger.getLogger(SimpleTaskWorkerTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (r == null)
+            throw new NullPointerException("SimpleTaskWorkerTest: Record not created.");
+        SimpleTaskWorker instance = new SimpleTaskWorker(p, r);
+        ExecutorService executor = Executors.newFixedThreadPool(1); // this test only needs 1 thread...
+        executor.execute(instance);
+        executor.shutdown();
+        while (!executor.isTerminated()) {
+            // wait
+        }
+        System.out.println("SimpleTaskWorkerTest: result record = " + r);
     }
-    
 }
