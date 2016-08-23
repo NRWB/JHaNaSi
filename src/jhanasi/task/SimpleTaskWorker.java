@@ -31,6 +31,8 @@ import jhanasi.file.utils.Record;
  */
 public class SimpleTaskWorker implements Runnable {
 
+    // Even for smaller files, using 4096 should be OK
+    // see: http://tutorials.jenkov.com/java-io/bufferedinputstream.html#setting-buffer-size
     public static final int DEFAULT_BUFFER = 4096; // 4096 8192 16384
 
     private final Path path;
