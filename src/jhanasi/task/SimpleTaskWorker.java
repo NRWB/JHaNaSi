@@ -57,8 +57,10 @@ public class SimpleTaskWorker implements Runnable {
                 DigestInputStream dis = new DigestInputStream(is, md)) {
             byte[] buffer = new byte[DEFAULT_BUFFER];
             while (dis.read(buffer) != -1) {
+                md.update(buffer);
             }
         }
         this.record.setFileHash(Digest.getDigestHash(md.digest()));
+        md.reset();
     }
 }
