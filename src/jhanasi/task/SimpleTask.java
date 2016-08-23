@@ -95,7 +95,10 @@ public class SimpleTask {
     }
 
     private void backgroundWork(final Map<Path, Record> filePaths, final int threadCount) {
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        //ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(threadCount, threadCount,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue<Runnable>());
         for (Map.Entry<Path, Record> fp : filePaths.entrySet()) {
             //Runnable worker = new SimpleTaskWorker(filePaths.get(i).getPathName(), filePaths);
             Runnable worker = new SimpleTaskWorker(fp.getKey(), fp.getValue());
