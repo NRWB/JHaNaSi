@@ -101,6 +101,13 @@ public class SimpleTask {
         });
     }
 
+    /**
+     * Performs background work on selected files over a given number of threads.
+     * 
+     * @param filePaths The collection of files to process with the SimpleTaskWorker.java class
+     * 
+     * @param threadCount The threads to use for the process work (ideally this is determined when calling this method, and [should] may be very likely related to the number of objects in the @filePaths collection)
+     */
     private void backgroundWork(final Map<Path, Record> filePaths, final int threadCount) {
         //ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(threadCount, threadCount,
