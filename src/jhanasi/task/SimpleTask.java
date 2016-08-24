@@ -100,11 +100,18 @@ public class SimpleTask {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(threadCount, threadCount,
                                       0L, TimeUnit.MILLISECONDS,
                                       new LinkedBlockingQueue<Runnable>());
+        // stream opted for, see http://programmers.stackexchange.com/questions/297162/why-should-i-use-functional-operations-instead-of-a-for-loop
+        filePaths.entrySet()
+            .stream()
+                .map((fp) -> new SimpleTaskWorker(fp.getKey(), fp.getValue()))
+                .forEach((worker) -> executor.execute(worker));
+        /*
         for (Map.Entry<Path, Record> fp : filePaths.entrySet()) {
             //Runnable worker = new SimpleTaskWorker(filePaths.get(i).getPathName(), filePaths);
             Runnable worker = new SimpleTaskWorker(fp.getKey(), fp.getValue());
             executor.execute(worker);
         }
+        */
         executor.shutdown();
         while (!executor.isTerminated()) {
             // wait
