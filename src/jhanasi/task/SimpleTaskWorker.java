@@ -18,7 +18,6 @@ package jhanasi.task;
 
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
