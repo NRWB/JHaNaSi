@@ -115,27 +115,33 @@ public class SimpleTask {
     /**
      * Performs background work on selected files over a given number of threads.
      * 
+     * Note 1: Edited in a "ThreadPoolExecutor executor = ..." from the Java
+     * core, as the previous line;
+     * "ExecutorService executor = Executors.newFixedThreadPool(threadCount);"
+     * gave errors during runtime.
+     * 
+     * Note 2: Stream opted for because of information found here:
+     * http://programmers.stackexchange.com/a/297163
+     * The previous (valid, yet less legible and potentially less optimize-able)
+     * code was:
+     * for (Map.Entry<Path, Record> fp : filePaths.entrySet()) {
+     *     //Runnable worker = new SimpleTaskWorker(filePaths.get(i).getPathName(), filePaths);
+     *     Runnable worker = new SimpleTaskWorker(fp.getKey(), fp.getValue());
+     *     executor.execute(worker);
+     * }
+     * 
      * @param filePaths The collection of files to process with the SimpleTaskWorker.java class
      * 
      * @param threadCount The threads to use for the process work (ideally this is determined when calling this method, and [should] may be very likely related to the number of objects in the @filePaths collection)
      */
     private void backgroundWork(final Map<Path, Record> filePaths, final int threadCount) {
-        //ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(threadCount, threadCount,
                                       0L, TimeUnit.MILLISECONDS,
                                       new LinkedBlockingQueue<Runnable>());
-        // stream opted for, see http://programmers.stackexchange.com/questions/297162/why-should-i-use-functional-operations-instead-of-a-for-loop
         filePaths.entrySet()
             .stream()
                 .map((fp) -> new SimpleTaskWorker(fp.getKey(), fp.getValue()))
                 .forEach((worker) -> executor.execute(worker));
-        /*
-        for (Map.Entry<Path, Record> fp : filePaths.entrySet()) {
-            //Runnable worker = new SimpleTaskWorker(filePaths.get(i).getPathName(), filePaths);
-            Runnable worker = new SimpleTaskWorker(fp.getKey(), fp.getValue());
-            executor.execute(worker);
-        }
-        */
         executor.shutdown();
         while (!executor.isTerminated()) {
             // wait
