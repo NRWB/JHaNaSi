@@ -22,10 +22,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import jhanasi.file.utils.Record;
 import jhanasi.file.utils.Search;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  *
@@ -33,6 +36,8 @@ import jhanasi.file.utils.Search;
  */
 public class SimpleTask {
 
+    private static final Logger logger = LogManager.getLogger(SimpleTask.class);
+    
     private final Path src;
     public static final int DEFAULT_CUTOFF = 65536;
 
@@ -50,8 +55,10 @@ public class SimpleTask {
         } catch (IOException ex) {
         }
 
-        if (files == null || files.isEmpty())
-            throw new RuntimeException("no files gathered");
+        if (files == null || files.isEmpty()) {
+            logger.fatal("No files gathered to delegate, terminating app.");
+            System.exit(-1);
+        }
 
         // mark start time
         long start = System.currentTimeMillis();
@@ -63,22 +70,22 @@ public class SimpleTask {
         long startPre = System.currentTimeMillis();
         prework(files, poolA, poolB);
         long endPre = System.currentTimeMillis();
-        System.out.println("prework time elapsed = " + (endPre - startPre) + " ms");
+        logger.info("prework time elapsed = " + (endPre - startPre) + " ms");
 
         long startPoolA = System.currentTimeMillis();
         backgroundWork(poolA, 16);
         long endPoolA = System.currentTimeMillis();
-        System.out.println("poolA time elapsed = " + (endPoolA - startPoolA) + " ms");
-        System.out.println("poolA.size(): " + poolA.size());
+        logger.info("poolA time elapsed = " + (endPoolA - startPoolA) + " ms");
+        logger.info("poolA.size(): " + poolA.size());
         long startPoolB = System.currentTimeMillis();
         backgroundWork(poolB, 1); // longer running per file
         long endPoolB = System.currentTimeMillis();
-        System.out.println("poolB time elapsed = " + (endPoolB - startPoolB) + " ms");
-        System.out.println("poolB.size(): " + poolB.size());
+        logger.info("poolB time elapsed = " + (endPoolB - startPoolB) + " ms");
+        logger.info("poolB.size(): " + poolB.size());
 
         // mark end time
         long end = System.currentTimeMillis();
-        System.out.println("elapsed = " + (end - start) + " ms");
+        logger.info("elapsed = " + (end - start) + " ms");
     }
 
     private void prework(final List<Record> src, final Map<Path, Record> a, final Map<Path, Record> b) {
@@ -99,11 +106,18 @@ public class SimpleTask {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(threadCount, threadCount,
                                       0L, TimeUnit.MILLISECONDS,
                                       new LinkedBlockingQueue<Runnable>());
+        // stream opted for, see http://programmers.stackexchange.com/questions/297162/why-should-i-use-functional-operations-instead-of-a-for-loop
+        filePaths.entrySet()
+            .stream()
+                .map((fp) -> new SimpleTaskWorker(fp.getKey(), fp.getValue()))
+                .forEach((worker) -> executor.execute(worker));
+        /*
         for (Map.Entry<Path, Record> fp : filePaths.entrySet()) {
             //Runnable worker = new SimpleTaskWorker(filePaths.get(i).getPathName(), filePaths);
             Runnable worker = new SimpleTaskWorker(fp.getKey(), fp.getValue());
             executor.execute(worker);
         }
+        */
         executor.shutdown();
         while (!executor.isTerminated()) {
             // wait

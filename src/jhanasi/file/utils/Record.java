@@ -56,5 +56,31 @@ public class Record {
     public void setFileHash(final String hash) {
         this.fileHash = hash;
     }
+    
+    /**
+     * 
+     * Create a string representation of this object in the format of:
+     * [
+     * {path:\path\to\file.txt},
+     * {size:1048}
+     * {hash: ... hash here ... }
+     * ]
+     * 
+     * *note: the above 5 line example is condensed to one line
+     * 
+     * @return A string representation of this objects private data fields.
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[{path:");
+        sb.append(this.pathName.toString());
+        sb.append("},{size:");
+        sb.append(this.fileSize);
+        sb.append("},{hash:");
+        sb.append(this.fileHash);
+        sb.append("}]");
+        return sb.toString();
+    }
 
 }
