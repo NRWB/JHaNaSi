@@ -88,6 +88,17 @@ public class SimpleTask {
         logger.info("elapsed = " + (end - start) + " ms");
     }
 
+    /**
+     * Splits up objects in the master source list into a smaller-files (and
+     * likely more amount of smaller files) list and a larger-files (and likely
+     * less amount of larger files) list.
+     * 
+     * @param src The source collection containing target files
+     * 
+     * @param a The output collection for generally smaller files
+     * 
+     * @param b The output collection for generally larger files
+     */
     private void prework(final List<Record> src, final Map<Path, Record> a, final Map<Path, Record> b) {
         if (src == null || a == null || b == null)
             throw new NullPointerException("null input");
