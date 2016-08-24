@@ -104,10 +104,8 @@ public class SimpleTask {
             throw new NullPointerException("null input");
         src.stream().forEach((rp) -> {
             if (rp.getFileSize() < DEFAULT_CUTOFF)
-                //a.add(rp);
                 a.put(rp.getPathName(), rp);
             else
-                //b.add(rp);
                 b.put(rp.getPathName(), rp);
         });
     }
