@@ -26,6 +26,15 @@ public interface Digest {
     // global immutable char[] that holds base 16 characters
     public static final char[] BASE16 = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
+    /**
+     * My created version of obtaining a String represented hash from an array
+     * of bytes that is reliable and somewhat fast.
+     * 
+     * @param arr The input byte[] to use
+     * 
+     * @return The String representation of the input bytes (e.g. a digest hash)
+     * 
+     */
     public static String getDigestHash(final byte[] arr) {
         final int len = arr.length;
         StringBuilder result = new StringBuilder(len * 2);
