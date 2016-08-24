@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import jhanasi.file.utils.Record;
 import jhanasi.file.utils.Search;
 import org.apache.logging.log4j.LogManager;
@@ -53,6 +54,8 @@ public class SimpleTask {
         try {
             files = fileFinder.getList();
         } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(SimpleTaskWorker.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error("SimpleTaskWorker - run() Exception", ex);
         }
 
         if (files == null || files.isEmpty()) {
