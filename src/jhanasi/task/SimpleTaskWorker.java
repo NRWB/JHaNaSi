@@ -80,7 +80,7 @@ public class SimpleTaskWorker implements Runnable {
         sb.append(", ");
         sb.append("results = ");
         sb.append(this.record.toString());
-        logger.info(sb.toString());
+        logger.trace(sb.toString());
         
         md.reset();
     }
